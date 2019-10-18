@@ -18,6 +18,8 @@ APV_TH = 5 # [%] (for stage 4)
 purchases_TH = 5 # [%] (for stage 5)
 DeltaPurchaseCVR_TH = 10 # [%] (for stage 8)
 DeltaLeads_TH = 8 # [%] (for stage 9)
+SumSellPosTH = 85 # [%] (for stage 3)
+SumSellNegTH = 85 # [%] (for stage 3)
 
 Cross2 = np.array(['web $ mobile_web','mobile_web','utm_65',\
                   'utm_102','medium_1','medium_2','medium_3'\
@@ -190,7 +192,9 @@ NegGrowth = (DimDrill[Q1+' Seles'][~DimDrill.IsPositiveGrowth] - DimDrill[Q2+' S
 DimDrill.set_value(DimDrill[DimDrill.IsPositiveGrowth].index,'Growth,Pos/Neg' ,PosGrowth)
 DimDrill.set_value(DimDrill[~DimDrill.IsPositiveGrowth].index,'Growth,Pos/Neg' ,NegGrowth)
 # In[]: stage 3
-
+AnalyzePos1 = SumPos1/np.sum(Data1.new_revenue)*100 > SumSellPosTH
+AnalyzeNeg1 = SumNeg1/np.sum(Data1.new_revenue)*100 > SumSellPosTH
+Anlyse2 = SumPos1/np.sum(Data1.new_revenue) > SumSellPosTH
 
 
 
