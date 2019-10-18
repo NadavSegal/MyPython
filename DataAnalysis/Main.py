@@ -189,6 +189,7 @@ NegGrowth = (DimDrill[Q1+' Seles'][~DimDrill.IsPositiveGrowth] - DimDrill[Q2+' S
     /(SumNeg1-SumNeg2)    
 DimDrill.set_value(DimDrill[DimDrill.IsPositiveGrowth].index,'Growth,Pos/Neg' ,PosGrowth)
 DimDrill.set_value(DimDrill[~DimDrill.IsPositiveGrowth].index,'Growth,Pos/Neg' ,NegGrowth)
+# In[]: stage 3
 
 
 
