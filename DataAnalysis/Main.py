@@ -13,15 +13,11 @@ DataPath = "C:/Users/naseg/Documents/MATLAB/DataAnalysis/Data/test_data.csv"
 Q1 = '2019-07'
 Q2 = '2019-04'
 InputProduct = 'product_2'
-SellsTH = 20 # [%]
+SelesTH = 20 # [%]
 APV_TH = 5 # [%] (for stage 4)
 purchases_TH = 5 # [%] (for stage 5)
 DeltaPurchaseCVR_TH = 10 # [%] (for stage 8)
 DeltaLeads_TH = 8 # [%] (for stage 9)
-
-Cross = np.array([['web','mobile_web',1],['mobile_web',1],['utm_65',1],\
-                  ['utm_102',1],['medium_1',1],['medium_2',1],['medium_3',1]\
-                  ,['medium_4',1]])
 
 Cross2 = np.array(['web $ mobile_web','mobile_web','utm_65',\
                   'utm_102','medium_1','medium_2','medium_3'\
@@ -31,6 +27,7 @@ Cross2 = np.array(['web $ mobile_web','mobile_web','utm_65',\
 # In[ ]: step 1
 Index = [Q1,Q2,'Trend[%]','Delta[%]']
 Data = (pd.read_csv(DataPath)).round(1)
+Data = Data.fillna('')
 
 Qdates = Data.growth_policy_quote_level_created_quarter
 ProductList = Data.Product
@@ -42,38 +39,18 @@ headers1 = list(Data1.columns.values)
 headers2 = list(Data2.columns.values)
 
 IndexAPV = ['APV '+Q1,'APV '+Q2,'DeltaAPV[%]','DeltaPurchases[%]'\
-            ,'SellsCondition','APVCondition','PurchasesCondition'\
+            ,'SelesCondition','APVCondition','PurchasesCondition'\
             ,'PurchaseCVR '+Q1,'PurchaseCVR '+Q2,'DeltaPurchaseCVR','DeltaLeads']
 df = pd.DataFrame(columns = Cross2,index = Index)
 apv = pd.DataFrame(columns = ['Result','Threshold','Analyse?'],index = IndexAPV)
 
 apv.set_value(IndexAPV[0:4],'Analyse?', '')
 apv.set_value(IndexAPV[0:4],'Threshold', '')
-apv.set_value(IndexAPV[4],'Threshold', SellsTH)
+apv.set_value(IndexAPV[4],'Threshold', SelesTH)
 apv.set_value(IndexAPV[5],'Threshold', APV_TH)
 apv.set_value(IndexAPV[6],'Threshold', purchases_TH)
 apv.set_value(IndexAPV[9],'Threshold', DeltaPurchaseCVR_TH)
 apv.set_value(IndexAPV[10],'Threshold', DeltaLeads_TH)
-
-#Col = []
-for i in range(Cross.size):
-    mask1 = np.zeros((Data1.shape), dtype=bool)
-    mask2 = np.zeros((Data2.shape), dtype=bool)
-    
-    for j in range(np.size(Cross[i])-1):
-        mask1 = np.logical_or(mask1,Data1[headers1].values == [Cross[i][j]])
-        mask2 = np.logical_or(mask2,Data2[headers2].values == [Cross[i][j]])
-        #Col[i] = Col[i] + Cross[i][j]
-    ind1 = np.sum(mask1,1) == Cross[i][-1]
-    ind2 = np.sum(mask2,1) == Cross[i][-1]
-
-    df.set_value(Index[0],Cross2[i], (Data1[ind1].new_revenue.sum(axis = 0)).round(0))
-    df.set_value(Index[1],Cross2[i], (Data2[ind2].new_revenue.sum(axis = 0)).round(0))
-    df.set_value(Index[2],Cross2[i], ((df.loc[Index[1],Cross2[i]]/df.loc[Index[0],Cross2[i]]-1)\
-                 *100).round(0))    
-    df.set_value(Index[3],Cross2[i], ((df.loc[Index[1],Cross2[i]]-df.loc[Index[0],Cross2[i]])\
-                 /(np.sum(Data1.new_revenue)-np.sum(Data2.new_revenue))*100).round(0)) 
-    
 
 # In[ ]:  plots
 ax = plt.subplot(111, frame_on=False) 
@@ -86,14 +63,14 @@ plt.table(cellText=df.values,colWidths = [0.5]*len(df.columns),
           loc='top')
 fig = plt.gcf()
 
-print('Sells Change for: ' + InputProduct + \
+print('Seles Change for: ' + InputProduct + \
       ' from ' + Q2 + ' to '+ Q1 + ' in ' +str(Delta) + '[%]')
 apv.set_value(IndexAPV[4],'Result', Delta)
-if SellsTH < abs(Delta):
-    print('This is significant change in sells')
+if SelesTH < abs(Delta):
+    print('This is significant change in seles')
     apv.set_value(IndexAPV[4],'Analyse?', 'Yes')
 else:
-    print('This is not a significant change in sells')
+    print('This is not a significant change in seles')
     apv.set_value(IndexAPV[4],'Analyse?', 'No')
 
 # In[ ]: stage 3
@@ -125,8 +102,8 @@ else:
     apv.set_value(IndexAPV[6],'Analyse?', 'No')
 
 # In[ ]: stage 7
-Purchase1 = np.sum(Data1.new_revenue)
-Purchase2 = np.sum(Data2.new_revenue)
+Purchase1 = np.sum(Data1.new_users)
+Purchase2 = np.sum(Data2.new_users)
 lead1 = np.sum(Data1.leads)
 lead2 = np.sum(Data2.leads)
 
@@ -168,27 +145,50 @@ fig = plt.gcf()
 
 # In[ ]: Pilar 2 - dimenssions drill down
 # In[ ]: stage 2
-
-
-
-# In[ ]:  functions:
-def Fields(Data,Str):
-    #https://stackoverflow.com/questions/48851749/searching-for-string-in-all-columns-of-dataframe-in-python
-    FloatData = Data.select_dtypes(exclude='object')
-    BooleData = Data.select_dtypes(include='object')
-    out = Data[Data.eq(Str).any(axis=1)]
-    return (out)
-
 FloatData = Data.select_dtypes(exclude='object')
-BooleData = Data.select_dtypes(include='object')
-List = list('s')
- L = []
-for col in BooleData:
-    tmp = BooleData[col].unique()
-    List.append(tmp[:])
-    #DataTmp = Fields(Data1,col)
-    
+strData = Data.select_dtypes(include='object')
+#DimDrill = pd.DataFrame(columns = ['Seles','Leads','Purcheses'],index = ['te1','te2'])
+DimDrill = pd.DataFrame()
+j = 0
+jj = 0
+fields = np.empty(strData.columns.shape[0], dtype=object)
+for col in strData[strData.columns[[0,1,2,3,5,8]]]:
+    fields[j] = strData[col].unique()
+    for field in fields[j]:
+        DimDrill.set_value(field,'Metrica',col)
+        # Data1:
+        SumSeles1 = np.sum(Data1[Data1[col].str.match(field)].new_revenue) 
+        SumLead1 = np.sum(Data1[Data1[col].str.match(field)].leads)         
+        SumPurchase1 = np.sum(Data1[Data1[col].str.match(field)].new_users)                 
+        DimDrill.set_value(field, Q1+' Seles',SumSeles1)
+        DimDrill.set_value(field, Q1+' Leads',SumLead1)
+        DimDrill.set_value(field, Q1+' Purcheses',SumPurchase1)        
+        # Data2:
+        SumSeles2 = np.sum(Data2[Data2[col].str.match(field)].new_revenue) 
+        SumLead2 = np.sum(Data2[Data2[col].str.match(field)].leads)         
+        SumPurchase2 = np.sum(Data2[Data2[col].str.match(field)].new_users) 
+        DimDrill.set_value(field, Q2+' Seles',SumSeles2)
+        DimDrill.set_value(field, Q2+' Leads',SumLead2)
+        DimDrill.set_value(field, Q2+' Purcheses',SumPurchase2)        
+        # common:
+        DimDrill.set_value(field,'IsPositiveGrowth',SumSeles2>SumSeles1)  
+        
+        jj = jj+1
+    j =j+1
 
+
+# In[]: stage 2   
+SumPos1 = np.sum(DimDrill[Q1+' Seles'][DimDrill.IsPositiveGrowth])
+SumPos2 = np.sum(DimDrill[Q2+' Seles'][DimDrill.IsPositiveGrowth])
+SumNeg1 = np.sum(DimDrill[Q1+' Seles'][~DimDrill.IsPositiveGrowth])
+SumNeg2 = np.sum(DimDrill[Q2+' Seles'][~DimDrill.IsPositiveGrowth])
+
+PosGrowth = (DimDrill[Q1+' Seles'][DimDrill.IsPositiveGrowth] - DimDrill[Q2+' Seles'][DimDrill.IsPositiveGrowth])\
+    /(SumPos1-SumPos2)
+NegGrowth = (DimDrill[Q1+' Seles'][~DimDrill.IsPositiveGrowth] - DimDrill[Q2+' Seles'][~DimDrill.IsPositiveGrowth])\
+    /(SumNeg1-SumNeg2)    
+DimDrill.set_value(DimDrill[DimDrill.IsPositiveGrowth].index,'Growth,Pos/Neg' ,PosGrowth)
+DimDrill.set_value(DimDrill[~DimDrill.IsPositiveGrowth].index,'Growth,Pos/Neg' ,NegGrowth)
 
 
 
