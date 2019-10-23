@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 # In[ ]: inputs:
 #DataPath = "C:/Users/Nadav/Documents/MATLAB/DataAnalysis/Data/test_data.csv"
-DataPath = "C:/Users/naseg/Documents/MATLAB/DataAnalysis/Data/test_data.csv"
+DataPath = "/home/nadav/Documents/MATLAB/DataAnalysis/Data/test_data.csv"
 Q1 = '2019-07'
 Q2 = '2019-04'
 InputProduct = 'product_2'

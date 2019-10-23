@@ -8,7 +8,7 @@
 # In[ ]:
 ########## My additions:
 import sys, os 
-Out = 'C:/Users/naseg/Documents/MyPython/AdvancedML/week1'
+Out = '/home/nadav/Documents/MyPython/AdvancedML/week1/'
 sys.path.append(Out)
 os.chdir(Out)
 ########## End my additions
@@ -32,8 +32,8 @@ grader = grading.Grader(assignment_key="UaHtvpEFEee0XQ6wjK-hZg",
 
 
 # token expires every 30 min
-COURSERA_TOKEN = ### YOUR TOKEN HERE
-COURSERA_EMAIL = na.segal@gmail.com
+COURSERA_TOKEN = 'cdQGlcayjKdPdKSP'### YOUR TOKEN HERE
+COURSERA_EMAIL = 'na.segal@gmail.com'
 
 
 # ## Two-dimensional classification
@@ -147,9 +147,9 @@ def probability(X, w):
     """
 
     # TODO:<your code here>
-    E = np.exp(-np.dot(w,X.T))
+    E = np.exp(-np.dot(X,w))
     P = 1/(1+E)
-    return E
+    return P
 
 
 # In[ ]:
@@ -191,6 +191,11 @@ def compute_loss(X, y, w):
     Keep in mind that our loss is averaged over all samples (rows) in X.
     """
     # TODO:<your code here>
+    L = X.shape[0]     
+    L_1 = (-(y*np.log(probability(X, w)) + (1-y)*np.log(1-probability(X, w))))/L
+    L_2 = np.sum(L_1)
+    return L_2
+    
 
 
 # In[ ]:
@@ -233,8 +238,15 @@ def compute_grad(X, y, w):
     and weight vector w [6], compute vector [6] of derivatives of L over each weights.
     Keep in mind that our loss is averaged over all samples (rows) in X.
     """
-    
     # TODO<your code here>
+    dldw = np.zeros(X.shape[1])
+    P = probability(X,w)
+    L = X.shape[0]  
+    const1 = y/P+(y-1)/(1-P)
+    for i in range(X.shape[1]):           
+           dpdw = (1 + np.exp(-np.dot(X,w)))**(-2)*np.exp(-np.dot(X,w))*X[:,i]
+           dldw[i] =  np.sum(-dpdw*const1)/L
+    return dldw
 
 
 # In[ ]:
