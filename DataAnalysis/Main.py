@@ -178,24 +178,57 @@ for col in strData[strData.columns[[0,1,2,3,5,8]]]:
         jj = jj+1
     j =j+1
 
+# In[]: stage 2
+for col in strData[strData.columns[[0,1,2,3,5,8]]]:
+        PosIndx = np.logical_and(DimDrill.IsPositiveGrowth,DimDrill.Metrica == col)
+        NegIndx = np.logical_and(~DimDrill.IsPositiveGrowth,DimDrill.Metrica == col)
+        # Data1:
+        SumPos1 = np.sum(DimDrill[Q1+' Seles'][PosIndx])
+        SumNeg1 = np.sum(DimDrill[Q1+' Seles'][NegIndx])
+        # Data2:
+        SumPos2 = np.sum(DimDrill[Q2+' Seles'][PosIndx])
+        SumNeg2 = np.sum(DimDrill[Q2+' Seles'][NegIndx])
+        fields = strData[col].unique()
+        # Common:
+        for field in fields:
+               PosFieldInd = np.logical_and(PosIndx,DimDrill.index == field)
+               NegFieldInd = np.logical_and(NegIndx,DimDrill.index == field)
+               PosGrowth = np.sum(DimDrill[Q2+' Seles'][PosFieldInd]-DimDrill[Q1+' Seles'][PosFieldInd])/(SumPos2 - SumPos1)
+               NegGrowth = np.sum(DimDrill[Q2+' Seles'][NegFieldInd]-DimDrill[Q1+' Seles'][NegFieldInd])/(SumNeg2 - SumNeg1)
+               DimDrill.set_value(DimDrill[PosFieldInd].index,'Growth,Pos/Neg' ,PosGrowth)
+               DimDrill.set_value(DimDrill[NegFieldInd].index,'Growth,Pos/Neg' ,NegGrowth)
+        # stage 3
+        if SumPos1/(SumPos1+SumNeg1)*100 > SumSellPosTH:               
+               DimDrill.set_value(PosIndx,'Analyse' ,'YES')
+               DimDrill.set_value(NegIndx,'Analyse' ,'NO')
+        elif SumNeg1/(SumPos1+SumNeg1)*100 > SumSellNegTH:
+               DimDrill.set_value(PosIndx,'Analyse' ,'NO')
+               DimDrill.set_value(NegIndx,'Analyse' ,'YES')
+        else:
+               DimDrill.set_value(np.logical_or(NegIndx,PosIndx),'Analyse' ,'YES')
 
-# In[]: stage 2   
-SumPos1 = np.sum(DimDrill[Q1+' Seles'][DimDrill.IsPositiveGrowth])
-SumPos2 = np.sum(DimDrill[Q2+' Seles'][DimDrill.IsPositiveGrowth])
-SumNeg1 = np.sum(DimDrill[Q1+' Seles'][~DimDrill.IsPositiveGrowth])
-SumNeg2 = np.sum(DimDrill[Q2+' Seles'][~DimDrill.IsPositiveGrowth])
-
-PosGrowth = (DimDrill[Q1+' Seles'][DimDrill.IsPositiveGrowth] - DimDrill[Q2+' Seles'][DimDrill.IsPositiveGrowth])\
-    /(SumPos1-SumPos2)
-NegGrowth = (DimDrill[Q1+' Seles'][~DimDrill.IsPositiveGrowth] - DimDrill[Q2+' Seles'][~DimDrill.IsPositiveGrowth])\
-    /(SumNeg1-SumNeg2)    
-DimDrill.set_value(DimDrill[DimDrill.IsPositiveGrowth].index,'Growth,Pos/Neg' ,PosGrowth)
-DimDrill.set_value(DimDrill[~DimDrill.IsPositiveGrowth].index,'Growth,Pos/Neg' ,NegGrowth)
 # In[]: stage 3
-AnalyzePos1 = SumPos1/np.sum(Data1.new_revenue)*100 > SumSellPosTH
-AnalyzeNeg1 = SumNeg1/np.sum(Data1.new_revenue)*100 > SumSellPosTH
-Anlyse2 = SumPos1/np.sum(Data1.new_revenue) > SumSellPosTH
-
-
-
-
+#  Positive:
+for col in strData[strData.columns[[0,1,2,3,5,8]]]:
+        PosIndx = np.logical_and(DimDrill.IsPositiveGrowth,DimDrill.Metrica == col)
+        fields = DimDrill['Growth,Pos/Neg'][PosIndx]
+        fields = fields.sort_values(ascending=False)
+        fields = fields.index
+        j=1
+        for field in fields:
+               print(field)
+               PosFieldInd = np.logical_and(PosIndx,DimDrill.index == field)
+               DimDrill.set_value(DimDrill[PosFieldInd].index,'Growth-Rank' ,j)
+               j = j+1
+#  Negative:
+for col in strData[strData.columns[[0,1,2,3,5,8]]]:
+        NegIndx = np.logical_and(~DimDrill.IsPositiveGrowth,DimDrill.Metrica == col)
+        fields = DimDrill['Growth,Pos/Neg'][NegIndx]
+        fields = fields.sort_values(ascending=False)
+        fields = fields.index
+        j=1
+        for field in fields:
+               print(field)
+               NegFieldInd = np.logical_and(NegIndx,DimDrill.index == field)
+               DimDrill.set_value(DimDrill[NegFieldInd].index,'Growth-Rank' ,j)
+               j = j+1

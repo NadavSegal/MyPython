@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 
 from tensorflow.keras import Model
-tf.convert_to_tensor([1]) # for unknown bug fix 
+
 
 m=0.1
 b=0.3
