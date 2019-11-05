@@ -57,7 +57,7 @@ grader = grading.Grader(assignment_key="XtD7ho3TEeiHQBLWejjYAA",
 
 
 # token expires every 30 min
-COURSERA_TOKEN = "wKV5obOUi0zUv5tA"
+COURSERA_TOKEN = "pQoWl7fdZi3bXIGV"
 COURSERA_EMAIL = "na.segal@gmail.com"
 
 
@@ -208,6 +208,7 @@ for epoch in range(EPOCHS):  # we finish an epoch when we've looked at all train
     print('EPOCH NUM', epoch )
     print(train_loss)
     print(val_loss)
+    print(valid_accuracy)
 # # Submit a linear model
 
 # In[ ]:
@@ -250,11 +251,17 @@ grader.submit(COURSERA_EMAIL, COURSERA_TOKEN)
 
 # write the code here to get a new `step` operation and then run the cell with training loop above.
 # name your variables in the same way (e.g. logits, probas, classes, etc) for safety.
-### YOUR CODE HERE ###
-hidden1 = tf.layers.dense(inputs, 256, activation=tf.nn.sigmoid)
+### YOUR CODE HERE ###                                 
+hidden1 = tf.layers.dense(input_X, 256, activation=tf.nn.sigmoid)
 hidden2 = tf.layers.dense(hidden1, 256, activation=tf.nn.sigmoid)
-_, batch_loss = s.run([step, loss], {input_X: X_train_flat[batch_start:batch_start+BATCH_SIZE], 
-                                             input_y: y_train_oh[batch_start:batch_start+BATCH_SIZE]})
+logits = tf.layers.dense(hidden2, 10)
+#hidden1 = keras.layers.Dense(256, input_dim=784, activation=tf.nn.sigmoid)
+#logits = keras.layers.Dense(10, input_dim=256, activation=tf.nn.sigmoid)
+probas = tf.nn.softmax(logits)
+classes = tf.argmax(probas,axis = 1)
+loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits = logits,labels = input_y)) 
+step = tf.train.AdamOptimizer().minimize(loss)
+
 
 # # Submit the MLP with 2 hidden layers
 # Run these cells after training the MLP with 2 hidden layers

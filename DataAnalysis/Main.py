@@ -7,23 +7,21 @@ This is a temporary script file.
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import warnings
+warnings.simplefilter("ignore")
 # In[ ]: inputs:
 #DataPath = "C:/Users/Nadav/Documents/MATLAB/DataAnalysis/Data/test_data.csv"
 DataPath = "/home/nadav/Documents/MATLAB/DataAnalysis/Data/test_data.csv"
 Q1 = '2019-07'
 Q2 = '2019-04'
 InputProduct = 'product_2'
-SelesTH = 20 # [%]
+SalesTH = 20 # [%]
 APV_TH = 5 # [%] (for stage 4)
 purchases_TH = 5 # [%] (for stage 5)
 DeltaPurchaseCVR_TH = 10 # [%] (for stage 8)
 DeltaLeads_TH = 8 # [%] (for stage 9)
 SumSellPosTH = 85 # [%] (for stage 3)
 SumSellNegTH = 85 # [%] (for stage 3)
-
-Cross2 = np.array(['web $ mobile_web','mobile_web','utm_65',\
-                  'utm_102','medium_1','medium_2','medium_3'\
-                  ,'medium_4'])
 
 # In[ ]: Pilar 1 - analyzing high level metrics
 # In[ ]: step 1
@@ -41,38 +39,29 @@ headers1 = list(Data1.columns.values)
 headers2 = list(Data2.columns.values)
 
 IndexAPV = ['APV '+Q1,'APV '+Q2,'DeltaAPV[%]','DeltaPurchases[%]'\
-            ,'SelesCondition','APVCondition','PurchasesCondition'\
+            ,'SalesCondition','APVCondition','PurchasesCondition'\
             ,'PurchaseCVR '+Q1,'PurchaseCVR '+Q2,'DeltaPurchaseCVR','DeltaLeads']
-df = pd.DataFrame(columns = Cross2,index = Index)
+
 apv = pd.DataFrame(columns = ['Result','Threshold','Analyse?'],index = IndexAPV)
 
 apv.set_value(IndexAPV[0:4],'Analyse?', '')
 apv.set_value(IndexAPV[0:4],'Threshold', '')
-apv.set_value(IndexAPV[4],'Threshold', SelesTH)
+apv.set_value(IndexAPV[4],'Threshold', SalesTH)
 apv.set_value(IndexAPV[5],'Threshold', APV_TH)
 apv.set_value(IndexAPV[6],'Threshold', purchases_TH)
 apv.set_value(IndexAPV[9],'Threshold', DeltaPurchaseCVR_TH)
 apv.set_value(IndexAPV[10],'Threshold', DeltaLeads_TH)
 
 # In[ ]:  plots
-ax = plt.subplot(111, frame_on=False) 
-ax.xaxis.set_visible(False) 
-ax.yaxis.set_visible(False)
-plt.table(cellText=df.values,colWidths = [0.5]*len(df.columns),
-          rowLabels=df.index,
-          colLabels=df.columns,
-          cellLoc = 'center', rowLoc = 'center',
-          loc='top')
-fig = plt.gcf()
 
-print('Seles Change for: ' + InputProduct + \
+print('Sales Change for: ' + InputProduct + \
       ' from ' + Q2 + ' to '+ Q1 + ' in ' +str(Delta) + '[%]')
 apv.set_value(IndexAPV[4],'Result', Delta)
-if SelesTH < abs(Delta):
-    print('This is significant change in seles')
+if SalesTH < abs(Delta):
+    print('This is significant change in sales')
     apv.set_value(IndexAPV[4],'Analyse?', 'Yes')
 else:
-    print('This is not a significant change in seles')
+    print('This is not a significant change in sales')
     apv.set_value(IndexAPV[4],'Analyse?', 'No')
 
 # In[ ]: stage 3
@@ -149,7 +138,7 @@ fig = plt.gcf()
 # In[ ]: stage 2
 FloatData = Data.select_dtypes(exclude='object')
 strData = Data.select_dtypes(include='object')
-#DimDrill = pd.DataFrame(columns = ['Seles','Leads','Purcheses'],index = ['te1','te2'])
+#DimDrill = pd.DataFrame(columns = ['Sales','Leads','Purcheses'],index = ['te1','te2'])
 DimDrill = pd.DataFrame()
 j = 0
 jj = 0
@@ -159,21 +148,21 @@ for col in strData[strData.columns[[0,1,2,3,5,8]]]:
     for field in fields[j]:
         DimDrill.set_value(field,'Metrica',col)
         # Data1:
-        SumSeles1 = np.sum(Data1[Data1[col].str.match(field)].new_revenue) 
+        SumSales1 = np.sum(Data1[Data1[col].str.match(field)].new_revenue) 
         SumLead1 = np.sum(Data1[Data1[col].str.match(field)].leads)         
         SumPurchase1 = np.sum(Data1[Data1[col].str.match(field)].new_users)                 
-        DimDrill.set_value(field, Q1+' Seles',SumSeles1)
+        DimDrill.set_value(field, Q1+' Sales',SumSales1)
         DimDrill.set_value(field, Q1+' Leads',SumLead1)
         DimDrill.set_value(field, Q1+' Purcheses',SumPurchase1)        
         # Data2:
-        SumSeles2 = np.sum(Data2[Data2[col].str.match(field)].new_revenue) 
+        SumSales2 = np.sum(Data2[Data2[col].str.match(field)].new_revenue) 
         SumLead2 = np.sum(Data2[Data2[col].str.match(field)].leads)         
         SumPurchase2 = np.sum(Data2[Data2[col].str.match(field)].new_users) 
-        DimDrill.set_value(field, Q2+' Seles',SumSeles2)
+        DimDrill.set_value(field, Q2+' Sales',SumSales2)
         DimDrill.set_value(field, Q2+' Leads',SumLead2)
         DimDrill.set_value(field, Q2+' Purcheses',SumPurchase2)        
         # common:
-        DimDrill.set_value(field,'IsPositiveGrowth',SumSeles2>SumSeles1)  
+        DimDrill.set_value(field,'IsPositiveGrowth',SumSales2>SumSales1)  
         
         jj = jj+1
     j =j+1
@@ -183,18 +172,18 @@ for col in strData[strData.columns[[0,1,2,3,5,8]]]:
         PosIndx = np.logical_and(DimDrill.IsPositiveGrowth,DimDrill.Metrica == col)
         NegIndx = np.logical_and(~DimDrill.IsPositiveGrowth,DimDrill.Metrica == col)
         # Data1:
-        SumPos1 = np.sum(DimDrill[Q1+' Seles'][PosIndx])
-        SumNeg1 = np.sum(DimDrill[Q1+' Seles'][NegIndx])
+        SumPos1 = np.sum(DimDrill[Q1+' Sales'][PosIndx])
+        SumNeg1 = np.sum(DimDrill[Q1+' Sales'][NegIndx])
         # Data2:
-        SumPos2 = np.sum(DimDrill[Q2+' Seles'][PosIndx])
-        SumNeg2 = np.sum(DimDrill[Q2+' Seles'][NegIndx])
+        SumPos2 = np.sum(DimDrill[Q2+' Sales'][PosIndx])
+        SumNeg2 = np.sum(DimDrill[Q2+' Sales'][NegIndx])
         fields = strData[col].unique()
         # Common:
         for field in fields:
                PosFieldInd = np.logical_and(PosIndx,DimDrill.index == field)
                NegFieldInd = np.logical_and(NegIndx,DimDrill.index == field)
-               PosGrowth = np.sum(DimDrill[Q2+' Seles'][PosFieldInd]-DimDrill[Q1+' Seles'][PosFieldInd])/(SumPos2 - SumPos1)
-               NegGrowth = np.sum(DimDrill[Q2+' Seles'][NegFieldInd]-DimDrill[Q1+' Seles'][NegFieldInd])/(SumNeg2 - SumNeg1)
+               PosGrowth = np.sum(DimDrill[Q2+' Sales'][PosFieldInd]-DimDrill[Q1+' Sales'][PosFieldInd])/(SumPos2 - SumPos1)
+               NegGrowth = np.sum(DimDrill[Q2+' Sales'][NegFieldInd]-DimDrill[Q1+' Sales'][NegFieldInd])/(SumNeg2 - SumNeg1)
                DimDrill.set_value(DimDrill[PosFieldInd].index,'Growth,Pos/Neg' ,PosGrowth)
                DimDrill.set_value(DimDrill[NegFieldInd].index,'Growth,Pos/Neg' ,NegGrowth)
         # stage 3
@@ -216,7 +205,6 @@ for col in strData[strData.columns[[0,1,2,3,5,8]]]:
         fields = fields.index
         j=1
         for field in fields:
-               print(field)
                PosFieldInd = np.logical_and(PosIndx,DimDrill.index == field)
                DimDrill.set_value(DimDrill[PosFieldInd].index,'Growth-Rank' ,j)
                j = j+1
@@ -228,7 +216,9 @@ for col in strData[strData.columns[[0,1,2,3,5,8]]]:
         fields = fields.index
         j=1
         for field in fields:
-               print(field)
                NegFieldInd = np.logical_and(NegIndx,DimDrill.index == field)
                DimDrill.set_value(DimDrill[NegFieldInd].index,'Growth-Rank' ,j)
                j = j+1
+# Remove empty un changed Growth fields: 
+ind = DimDrill['Growth,Pos/Neg'] == 0            
+DimDrill = DimDrill.drop(DimDrill.index[ind],axis = 0)
