@@ -157,10 +157,16 @@ def download_week_6_resources(save_path):
 
 
 def link_all_keras_resources():
-    link_all_files_from_dir("../readonly/keras/datasets/", os.path.expanduser("~/.keras/datasets"))
-    link_all_files_from_dir("../readonly/keras/models/", os.path.expanduser("~/.keras/models"))
-
-
+    #link_all_files_from_dir("../readonly/keras/datasets/", os.path.expanduser("~/.keras/datasets"))
+    #link_all_files_from_dir("../readonly/keras/models/", os.path.expanduser("~/.keras/models"))
+    KerasPath1 = "/home/nadav/anaconda3/lib/python3.7/site-packages/keras/datasets"
+    KerasPath2 = "/home/nadav/anaconda3/lib/python3.7/site-packages/keras/models"
+    readOnly1 = "/home/nadav/Documents/MyPython/AdvancedML/readonly/keras/datasets/"
+    readOnly2 = "/home/nadav/Documents/MyPython/AdvancedML/readonly/keras/models/"
+    
+    link_all_files_from_dir(readOnly1, os.path.expanduser(KerasPath1))
+    link_all_files_from_dir(readOnly2, os.path.expanduser(KerasPath2))
+    
 def link_week_3_resources():
     link_all_files_from_dir("../readonly/week3/", ".")
 

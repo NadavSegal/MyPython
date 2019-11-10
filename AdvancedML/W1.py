@@ -27,3 +27,21 @@ grader = grading.Grader(assignment_key="UaHtvpEFEee0XQ6wjK-hZg",
 
 with open('train.npy', 'rb') as fin:
     X = np.load(fin)
+    
+
+
+####################
+
+
+import download_utils
+# Keras resources¶
+download_utils.download_all_keras_resources("readonly/keras/models", "readonly/keras/datasets")
+
+#Week 3 resources
+download_utils.download_week_3_resources("readonly/week3")
+
+#Week 4 resources
+download_utils.download_week_4_resources("readonly/week4")
+
+#Week 6 resources
+download_utils.download_week_6_resources("readonly/week6")

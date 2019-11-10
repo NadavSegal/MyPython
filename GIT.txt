@@ -5,6 +5,7 @@ git config --global user.email "youremail@domain.com"
 other commands
 git clone (url)
 git add (file names)
+git add **/*.py
 git commit -m "(committed message)
 git push -u origin master
 git remote add origin master (url)
