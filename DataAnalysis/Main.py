@@ -15,13 +15,17 @@ DataPath = "/home/nadav/Documents/MATLAB/DataAnalysis/Data/test_data.csv"
 Q1 = '2019-07'
 Q2 = '2019-04'
 InputProduct = 'product_2'
+# Pilar 1:
 SalesTH = 20 # [%]
 APV_TH = 5 # [%] (for stage 4)
 purchases_TH = 5 # [%] (for stage 5)
 DeltaPurchaseCVR_TH = 10 # [%] (for stage 8)
 DeltaLeads_TH = 8 # [%] (for stage 9)
+# pilar 2:
 SumSellPosTH = 85 # [%] (for stage 3)
 SumSellNegTH = 85 # [%] (for stage 3)
+mTH = 7 # (for stage 4)
+SumGrowthTH = 0.7  # (for stage 4)
 
 # In[ ]: Pilar 1 - analyzing high level metrics
 # In[ ]: step 1
@@ -222,3 +226,50 @@ for col in strData[strData.columns[[0,1,2,3,5,8]]]:
 # Remove empty un changed Growth fields: 
 ind = DimDrill['Growth,Pos/Neg'] == 0            
 DimDrill = DimDrill.drop(DimDrill.index[ind],axis = 0)
+DimDrill = DimDrill.sort_values(['Metrica','IsPositiveGrowth','Growth-Rank'], ascending=[True, True, True])
+
+# stage 4: 
+# if sum(Growth_Share_fieldXm)>=70% where 1<m<=7 then group by m
+# positive:
+for col in strData[strData.columns[[0,1,2,3,5,8]]]:
+       NegIndx = np.logical_and(~DimDrill.IsPositiveGrowth,DimDrill.Metrica == col)
+       SumGrowth = 0
+       OtherNegIndx = ~NegIndx == NegIndx
+       for m in range(1,np.sum(NegIndx == True)+1):              
+              NegIndxM = np.logical_and(NegIndx,DimDrill['Growth-Rank'] ==m)
+              SumGrowth = SumGrowth + (np.sum(DimDrill['Growth,Pos/Neg'][NegIndxM]))
+              if m < mTH and SumGrowth < SumGrowthTH:         
+                     DimDrill.set_value(NegIndxM,'Gruop' ,['G.Neg-' + np.str(m)])
+                     mFinal = m
+              else:  
+                     OtherNegIndx[NegIndxM] = True              
+       
+       if OtherNegIndx.any():
+              tmp = DimDrill[OtherNegIndx].sum(axis=0)
+              DimDrill = DimDrill.drop(DimDrill.index[OtherNegIndx],axis = 0)
+              DimDrill.loc[col + '-Other-Neg'] = tmp
+              DimDrill.set_value(col + '-Other-Neg','Gruop' ,'G.Neg-'+ np.str(mFinal+1)+' Batch')
+              DimDrill.set_value(col + '-Other-Neg','Growth-Rank' , (mFinal+1))
+              DimDrill.set_value(col + '-Other-Neg','Metrica' , col)
+              
+       PosIndx = np.logical_and(DimDrill.IsPositiveGrowth,DimDrill.Metrica == col)
+       SumGrowth = 0
+       OtherPosIndx = ~PosIndx == PosIndx
+       for m in range(1,np.sum(PosIndx == True)+1):              
+              PosIndxM = np.logical_and(PosIndx,DimDrill['Growth-Rank'] ==m)
+              SumGrowth = SumGrowth + (np.sum(DimDrill['Growth,Pos/Neg'][PosIndxM]))
+              if m < mTH and SumGrowth < SumGrowthTH:         
+                     DimDrill.set_value(PosIndxM,'Gruop' ,['G.Pos-' + np.str(m)])
+                     mFinal = m
+              else:  
+                     OtherPosIndx[PosIndxM] = True              
+       
+       if OtherPosIndx.any():
+              tmp = DimDrill[OtherPosIndx].sum(axis=0)
+              DimDrill = DimDrill.drop(DimDrill.index[OtherPosIndx],axis = 0)
+              DimDrill.loc[col + '-Other-Pos'] = tmp
+              DimDrill.set_value(col + '-Other-Pos','Gruop' ,'G.Pos-'+ np.str(mFinal+1)+' Batch')
+              DimDrill.set_value(col + '-Other-Pos','Growth-Rank' , (mFinal+1))
+              DimDrill.set_value(col + '-Other-Pos','Metrica' , col)       
+       
+DimDrill = DimDrill.sort_values(['Metrica','IsPositiveGrowth','Growth-Rank'], ascending=[True, True, True])       
