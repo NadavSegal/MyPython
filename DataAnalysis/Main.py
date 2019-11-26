@@ -69,7 +69,28 @@ DimDrill = DA.DimStage5(DimDrill,Q1,Q2,strData,SalesShareTH)
 DimDrill = DA.DimStage9(DimDrill,strData,H_indexTH)
 
 # In[]: Data ordering
-DimDrill = DimDrill.sort_values(['Metrica','IsPositiveGrowth','Growth-Rank'], ascending=[True, True, True])  
+DimDrill = DimDrill.sort_values(['IsPositiveGrowth','Metrica','Growth-Rank'], ascending=[True, True, True])  
+
+
+ax =(display(DimDrill))
+fig = ax.get_figure()
+
+display(DimDrill)
+
+from IPython.display import display, HTML
+display(HTML(DimDrill.to_html()))
+print DimDrill.to_html()
+
+DimDrill.plot.t
+ax = DimDrill.describe()
+
+
+
+
+
+
+
+
 
 
 
