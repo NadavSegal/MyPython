@@ -49,6 +49,19 @@ def MatStage1(Q1,Q2,DataPath,InputProduct,SalesTH,APV_TH,purchases_TH,DeltaPurch
            print('This is not a significant change in sales')
            apv.set_value(IndexAPV[4],'Analyse?', 'No')
            
+       apv.set_value(IndexAPV[0],'Notes','APV_Q22019=SUM(sales_Q22019)/SUM(purchases_Q22019)')
+       apv.set_value(IndexAPV[1],'Notes','APV_Q22019=SUM(sales_Q22019)/SUM(purchases_Q22019)')
+       apv.set_value(IndexAPV[2],'Notes','Δ% APV = (APV_Q32019/APV_Q22019)-1')
+       apv.set_value(IndexAPV[3],'Notes','Δ% Purchases= (SUM(purchases_Q32019)/SUM(purchases_Q22019))-1')
+       apv.set_value(IndexAPV[4],'Notes','Is the change in sales signficant enough to analyze?')
+       apv.set_value(IndexAPV[5],'Notes','Is the change in APV signficant enough to analyze?')
+       apv.set_value(IndexAPV[6],'Notes','Is the change in purchases signficant enough to analyze?')
+       apv.set_value(IndexAPV[7],'Notes','Purchase_CVR_Q22019 = Purchases_Q22019/Leads_Q22019')
+       apv.set_value(IndexAPV[8],'Notes','Purchase_CVR_Q22019 = Purchases_Q22019/Leads_Q22019')
+       apv.set_value(IndexAPV[9],'Notes','Δ% Purchase_CVR= Purchase_CVR_Q32019/ Purchase_CVR_Q22019-1')
+       apv.set_value(IndexAPV[10],'Notes','Δ% Leads = Leads_Q32019 /Leads_Q32019-1')                     
+       
+           
        return apv,IndexAPV, Data,Data1,Data2
 
 def MatStage3(DataQ1,DataQ2,apv,IndexAPV):
@@ -138,7 +151,7 @@ def DimStage1(Data,DataQ1,DataQ2,Q1,Q2):
        for col in strData[strData.columns[[0,1,2,3,5,8]]]:
            fields[j] = strData[col].unique()
            for field in fields[j]:
-               DimDrill.set_value(field,'Metrica',col)
+               DimDrill.set_value(field,'Dimension',col)
                # DataQ1:
                SumSales1 = np.sum(DataQ1[DataQ1[col].str.match(field)].new_revenue) 
                SumLead1 = np.sum(DataQ1[DataQ1[col].str.match(field)].leads)         
@@ -162,8 +175,8 @@ def DimStage1(Data,DataQ1,DataQ2,Q1,Q2):
 
 def DimStage2(DimDrill,strData,Q1,Q2,SumSellPosTH,SumSellNegTH):
        for col in strData[strData.columns[[0,1,2,3,5,8]]]:
-               PosIndx = np.logical_and(DimDrill.IsPositiveGrowth,DimDrill.Metrica == col)
-               NegIndx = np.logical_and(~DimDrill.IsPositiveGrowth,DimDrill.Metrica == col)
+               PosIndx = np.logical_and(DimDrill.IsPositiveGrowth,DimDrill.Dimension == col)
+               NegIndx = np.logical_and(~DimDrill.IsPositiveGrowth,DimDrill.Dimension == col)
                # DataQ1:
                SumPos1 = np.sum(DimDrill[Q1+' Sales'][PosIndx])
                SumNeg1 = np.sum(DimDrill[Q1+' Sales'][NegIndx])
@@ -193,7 +206,7 @@ def DimStage2(DimDrill,strData,Q1,Q2,SumSellPosTH,SumSellNegTH):
 def DimStage3(DimDrill,strData):
        #  Positive:
        for col in strData[strData.columns[[0,1,2,3,5,8]]]:
-               PosIndx = np.logical_and(DimDrill.IsPositiveGrowth,DimDrill.Metrica == col)
+               PosIndx = np.logical_and(DimDrill.IsPositiveGrowth,DimDrill.Dimension == col)
                fields = DimDrill['Growth,Pos/Neg'][PosIndx]
                fields = fields.sort_values(ascending=False)
                fields = fields.index
@@ -204,7 +217,7 @@ def DimStage3(DimDrill,strData):
                       j = j+1
        #  Negative:
        for col in strData[strData.columns[[0,1,2,3,5,8]]]:
-               NegIndx = np.logical_and(~DimDrill.IsPositiveGrowth,DimDrill.Metrica == col)
+               NegIndx = np.logical_and(~DimDrill.IsPositiveGrowth,DimDrill.Dimension == col)
                fields = DimDrill['Growth,Pos/Neg'][NegIndx]
                fields = fields.sort_values(ascending=False)
                fields = fields.index
@@ -216,14 +229,14 @@ def DimStage3(DimDrill,strData):
        # Remove empty un changed Growth fields: 
        ind = DimDrill['Growth,Pos/Neg'] == 0            
        DimDrill = DimDrill.drop(DimDrill.index[ind],axis = 0)
-       DimDrill = DimDrill.sort_values(['Metrica','IsPositiveGrowth','Growth-Rank'], ascending=[True, True, True])
+       DimDrill = DimDrill.sort_values(['Dimension','IsPositiveGrowth','Growth-Rank'], ascending=[True, True, True])
        return DimDrill
 
 def DimStage4(DimDrill,strData,mTH,SumGrowthTH):
 # if sum(Growth_Share_fieldXm)>=70% where 1<m<=7 then group by m
        for col in strData[strData.columns[[0,1,2,3,5,8]]]:
               # positive:
-              PosIndx = np.logical_and(DimDrill.IsPositiveGrowth,DimDrill.Metrica == col)
+              PosIndx = np.logical_and(DimDrill.IsPositiveGrowth,DimDrill.Dimension == col)
               SumGrowth = 0
               mFinal = 0
               OtherPosIndx = ~PosIndx == PosIndx
@@ -242,12 +255,12 @@ def DimStage4(DimDrill,strData,mTH,SumGrowthTH):
                      DimDrill.loc[col + '-Other-Pos'] = tmp
                      DimDrill.set_value(col + '-Other-Pos','Gruop' ,'G.Pos-Batch')
                      DimDrill.set_value(col + '-Other-Pos','Growth-Rank' , (mFinal+1))
-                     DimDrill.set_value(col + '-Other-Pos','Metrica' , col) 
+                     DimDrill.set_value(col + '-Other-Pos','Dimension' , col) 
                      DimDrill.set_value(col + '-Other-Pos','IsPositiveGrowth' , True) 
                      
               
               # Negative
-              NegIndx = np.logical_and(DimDrill.IsPositiveGrowth==False,DimDrill.Metrica == col)
+              NegIndx = np.logical_and(DimDrill.IsPositiveGrowth==False,DimDrill.Dimension == col)
               SumGrowth = 0
               mFinal = 0
               OtherNegIndx = ~NegIndx == NegIndx
@@ -266,7 +279,7 @@ def DimStage4(DimDrill,strData,mTH,SumGrowthTH):
                      DimDrill.loc[col + '-Other-Neg'] = tmp
                      DimDrill.set_value(col + '-Other-Neg','Gruop' ,'G.Neg-Batch')
                      DimDrill.set_value(col + '-Other-Neg','Growth-Rank' , (mFinal+1))
-                     DimDrill.set_value(col + '-Other-Neg','Metrica' , col)  
+                     DimDrill.set_value(col + '-Other-Neg','Dimension' , col)  
                      DimDrill.set_value(col + '-Other-Neg','IsPositiveGrowth' , False) 
                      
        return DimDrill
@@ -279,8 +292,8 @@ def DimStage5(DimDrill,Q1,Q2,strData,SalesShareTH):
        #SumPos2 = np.sum(DimDrill[Q2+' Sales'][DimDrill.IsPositiveGrowth])
        SumPos2 = np.sum(DimDrill[Q2+' Sales'])
        for col in strData[strData.columns[[0,1,2,3,5,8]]]:
-               #PosIndx = np.logical_and(DimDrill.IsPositiveGrowth,DimDrill.Metrica == col)
-               Indx = DimDrill.Metrica == col
+               #PosIndx = np.logical_and(DimDrill.IsPositiveGrowth,DimDrill.Dimension == col)
+               Indx = DimDrill.Dimension == col
                fields = DimDrill[Indx].index.unique()
                # Common:
                for field in fields:
@@ -300,8 +313,8 @@ def DimStage5(DimDrill,Q1,Q2,strData,SalesShareTH):
 def DimStage9(DimDrill,strData,H_indexTH):     
 
        for col in strData[strData.columns[[0,1,2,3,5,8]]]:
-              PosIndx = np.logical_and(DimDrill.IsPositiveGrowth,DimDrill.Metrica == col)
-              NegIndx = np.logical_and(DimDrill.IsPositiveGrowth==False,DimDrill.Metrica == col)
+              PosIndx = np.logical_and(DimDrill.IsPositiveGrowth,DimDrill.Dimension == col)
+              NegIndx = np.logical_and(DimDrill.IsPositiveGrowth==False,DimDrill.Dimension == col)
               
               H_index_pos = np.sum(np.square(DimDrill['Growth,Pos/Neg'][PosIndx]))*100
               H_index_neg = np.sum(np.square(DimDrill['Growth,Pos/Neg'][NegIndx]))*100
