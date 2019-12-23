@@ -8,7 +8,7 @@ import DataInspection as DA
 warnings.simplefilter("ignore")
 # In[ ]: inputs:
 #DataPath = "C:/Users/Nadav/Documents/MATLAB/DataAnalysis/Data/test_data.csv"
-DataPath = "/home/nadav/Documents/MATLAB/DataAnalysis/Data/test_data.csv"
+DataPath = "/home/nadav/Documents/Assistant /test_data.csv"
 Q1 = '2019-07'
 Q2 = '2019-04'
 InputProduct = 'product_2'
@@ -16,7 +16,9 @@ InputProduct = 'product_2'
 SalesTH = 20 # [%]
 APV_TH = 5 # [%] (for stage 4)
 purchases_TH = 5 # [%] (for stage 5)
+Purchase_CVR_TH = 105 # [%] (for stage 8)
 DeltaPurchaseCVR_TH = 10 # [%] (for stage 8)
+Leads_TH = 105 # [%] (for stage 8)
 DeltaLeads_TH = 8 # [%] (for stage 9)
 # pilar 2:
 SumSellPosTH = 85 # [%] (for stage 3)
@@ -28,7 +30,8 @@ H_indexTH = 25 # [%](for stage 9)
 
 # In[ ]: Pilar 1 - analyzing high level metrics
 # In[ ]: step 1
-apv,IndexAPV,Data,DataQ1,DataQ2 = DA.MatStage1(Q1,Q2,DataPath,InputProduct,SalesTH,APV_TH,purchases_TH,DeltaPurchaseCVR_TH,DeltaLeads_TH)
+apv,IndexAPV,Data,DataQ1,DataQ2 = DA.MatStage1(Q1,Q2,DataPath,InputProduct,SalesTH,APV_TH,purchases_TH,\
+                                               Purchase_CVR_TH,DeltaPurchaseCVR_TH,DeltaLeads_TH,Leads_TH)
 
 # In[ ]: stage 3
 apv = DA.MatStage3(DataQ1,DataQ2,apv,IndexAPV)
@@ -72,8 +75,8 @@ DimDrill = DA.DimStage9(DimDrill,strData,H_indexTH)
 DimDrill = DimDrill.sort_values(['IsPositiveGrowth','Dimension','Growth-Rank'], ascending=[True, True, True])  
 
 # In[]: Saving Results:
-DimDrill.to_excel(r'/home/nadav/Documents/MyPython/DataAnalysis/DimDrill.xlsx')
-apv.to_excel(r'/home/nadav/Documents/MyPython/DataAnalysis/APV.xlsx')
+DimDrill.to_excel(r'/home/nadav/MyPython/DataAnalysis/DimDrill.xlsx')
+apv.to_excel(r'/home/nadav/MyPython/DataAnalysis/APV.xlsx')
 
 
 

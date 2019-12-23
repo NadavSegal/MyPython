@@ -9,8 +9,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
-def MatStage1(Q1,Q2,DataPath,InputProduct,SalesTH,APV_TH,purchases_TH,DeltaPurchaseCVR_TH,DeltaLeads_TH):
-       Index = [Q1,Q2,'Trend[%]','Delta[%]']
+def MatStage1(Q1,Q2,DataPath,InputProduct,SalesTH,APV_TH,purchases_TH,\
+              purchasesCVR_TH,DeltaPurchaseCVR_TH,DeltaLeads_TH,Leads_TH):
+       #Index = [Q1,Q2,'Trend[%]','Delta[%]']
        Data = (pd.read_csv(DataPath)).round(1)
        Data = Data.fillna('')
        
@@ -20,12 +21,13 @@ def MatStage1(Q1,Q2,DataPath,InputProduct,SalesTH,APV_TH,purchases_TH,DeltaPurch
        Data2 = Data[np.array(Qdates == Q2) & np.array(ProductList == InputProduct)]
        
        Delta = ((np.sum(Data1.new_revenue)/np.sum(Data2.new_revenue)-1)*100).round(1)
-       headers1 = list(Data1.columns.values)
-       headers2 = list(Data2.columns.values)
+       #headers1 = list(Data1.columns.values)
+       #headers2 = list(Data2.columns.values)
        
        IndexAPV = ['APV '+Q1,'APV '+Q2,'DeltaAPV[%]','DeltaPurchases[%]'\
                    ,'SalesCondition','APVCondition','PurchasesCondition'\
-                   ,'PurchaseCVR '+Q1,'PurchaseCVR '+Q2,'DeltaPurchaseCVR','DeltaLeads']
+                   ,'PurchaseCVR '+Q1,'PurchaseCVR '+Q2,'DeltaPurchaseCVR'\
+                       ,'DeltaLeads','Leads ' +Q1,'Leads ' +Q2]
        
        apv = pd.DataFrame(columns = ['Result','Threshold','Analyse?'],index = IndexAPV)
        
@@ -34,8 +36,12 @@ def MatStage1(Q1,Q2,DataPath,InputProduct,SalesTH,APV_TH,purchases_TH,DeltaPurch
        apv.set_value(IndexAPV[4],'Threshold', SalesTH)
        apv.set_value(IndexAPV[5],'Threshold', APV_TH)
        apv.set_value(IndexAPV[6],'Threshold', purchases_TH)
+       apv.set_value(IndexAPV[7],'Threshold', purchasesCVR_TH)
+       apv.set_value(IndexAPV[8],'Threshold', purchasesCVR_TH)
        apv.set_value(IndexAPV[9],'Threshold', DeltaPurchaseCVR_TH)
        apv.set_value(IndexAPV[10],'Threshold', DeltaLeads_TH)
+       apv.set_value(IndexAPV[11],'Threshold', Leads_TH)
+       apv.set_value(IndexAPV[12],'Threshold', Leads_TH)
        
        # In[ ]:  plots
        
@@ -59,7 +65,9 @@ def MatStage1(Q1,Q2,DataPath,InputProduct,SalesTH,APV_TH,purchases_TH,DeltaPurch
        apv.set_value(IndexAPV[7],'Notes','Purchase_CVR_Q22019 = Purchases_Q22019/Leads_Q22019')
        apv.set_value(IndexAPV[8],'Notes','Purchase_CVR_Q22019 = Purchases_Q22019/Leads_Q22019')
        apv.set_value(IndexAPV[9],'Notes','Δ% Purchase_CVR= Purchase_CVR_Q32019/ Purchase_CVR_Q22019-1')
-       apv.set_value(IndexAPV[10],'Notes','Δ% Leads = Leads_Q32019 /Leads_Q32019-1')                     
+       apv.set_value(IndexAPV[10],'Notes','Δ% Leads = Leads_Q32019 /Leads_Q32019-1')  
+       apv.set_value(IndexAPV[11],'Notes','lead1 = np.sum(DataQ1.leads)')                  
+       apv.set_value(IndexAPV[12],'Notes','lead2 = np.sum(DataQ2.leads)')                  
        
            
        return apv,IndexAPV, Data,Data1,Data2
@@ -110,6 +118,8 @@ def MatStage7(DataQ1,DataQ2,apv,IndexAPV):
        apv.set_value(IndexAPV[8],'Result', PurchaseCVR2)
        apv.set_value(IndexAPV[9],'Result', DeltaPurchaseCVR)
        apv.set_value(IndexAPV[10],'Result', DeltaLead) 
+       apv.set_value(IndexAPV[11],'Result', lead1) 
+       apv.set_value(IndexAPV[12],'Result', lead2) 
        return apv,DeltaPurchaseCVR,DeltaLead
 
 def MatStage8(DeltaPurchaseCVR,DeltaPurchaseCVR_TH,apv,IndexAPV):
@@ -118,7 +128,8 @@ def MatStage8(DeltaPurchaseCVR,DeltaPurchaseCVR_TH,apv,IndexAPV):
            apv.set_value(IndexAPV[9],'Analyse?', 'Yes')
        else:
            print(np.array2string(DeltaPurchaseCVR) + '[%] This is not significant change in Delta Purchase CVR')
-           apv.set_value(IndexAPV[9],'Analyse?', 'No')       
+           apv.set_value(IndexAPV[9],'Analyse?', 'No')      
+       #apv.at[IndexAPV[0],'Result']*PurchaseCVR
        return apv    
 
 def MatStage9(DeltaLead,DeltaLeads_TH,apv,IndexAPV):
@@ -141,7 +152,6 @@ def MatStage9(DeltaLead,DeltaLeads_TH,apv,IndexAPV):
        return apv
 
 def DimStage1(Data,DataQ1,DataQ2,Q1,Q2):
-       FloatData = Data.select_dtypes(exclude='object')
        strData = Data.select_dtypes(include='object')
        #DimDrill = pd.DataFrame(columns = ['Sales','Leads','Purcheses'],index = ['te1','te2'])
        DimDrill = pd.DataFrame()

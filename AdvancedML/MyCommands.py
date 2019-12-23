@@ -3,6 +3,7 @@ sys.path.append("..")
 import grading
 import download_utils
 import tqdm_utils
+from tqdm import tqdm
 
 import numpy as np
 
