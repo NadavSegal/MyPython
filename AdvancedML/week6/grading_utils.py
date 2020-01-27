@@ -76,7 +76,7 @@ def test_validation_loss(decoder, s, generate_batch, val_img_embeds, val_caption
     random.seed(300)
     val_loss = 0
     batches_for_eval = 1000
-    for _ in tqdm_utils.tqdm_notebook_failsafe(range(batches_for_eval)):
+    for _ in tqdm_utils.SimpleTqdm(range(batches_for_eval)):
         val_loss += s.run(decoder.loss, generate_batch(val_img_embeds,
                                                        val_captions_indexed,
                                                        32,

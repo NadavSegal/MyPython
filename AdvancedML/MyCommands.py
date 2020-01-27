@@ -10,6 +10,7 @@ import numpy as np
 
 # import tensorflow as tf
 import tensorflow.compat.v1 as tf
+tf.debugging.set_log_device_placement(True) 
 from keras_utils2 import reset_tf_session
 s = reset_tf_session()
 

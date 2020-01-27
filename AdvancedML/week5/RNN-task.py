@@ -14,6 +14,9 @@
 
 #import tensorflow as tf
 import tensorflow.compat.v1 as tf
+#import tensorflow as
+from tensorflow import keras as keras
+tf.debugging.set_log_device_placement(True) 
 print(tf.__version__)
 import numpy as np
 import matplotlib.pyplot as plt
@@ -138,8 +141,8 @@ s = keras_utils2.reset_tf_session()
 # In[ ]:
 
 
-import keras
-from keras.layers import concatenate, Dense, Embedding
+#import keras
+from tensorflow.keras.layers import concatenate, Dense, Embedding
 
 rnn_num_units = 64  # size of hidden state
 embedding_size = 16  # for characters
