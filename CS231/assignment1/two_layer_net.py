@@ -285,9 +285,42 @@ show_net_weights(net)
 
 # In[ ]:
 
-
-best_net = None # store the best model into this 
-
+input_size = 32 * 32 * 3
+Hidden_size = [66]
+num_classes = 10
+best_val_acc = 0
+for hidden_size in Hidden_size:
+    net = TwoLayerNet(input_size, hidden_size, num_classes)
+    
+    # Train the network
+    stats = net.train(X_train, y_train, X_val, y_val,
+                num_iters=2000, batch_size=200,
+                learning_rate=10e-4, learning_rate_decay=0.95,
+                reg=0.2, verbose=True)
+    
+    # Predict on the validation set
+    val_acc = (net.predict(X_val) == y_val).mean()
+    print('Validation accuracy: ', val_acc)
+    plt.subplot(2, 1, 1)
+    plt.plot(stats['loss_history'])
+    plt.title('Loss history')
+    plt.xlabel('Iteration')
+    plt.ylabel('Loss')
+    
+    plt.subplot(2, 1, 2)
+    plt.plot(stats['train_acc_history'], label='train')
+    plt.plot(stats['val_acc_history'], label='val')
+    plt.title('Classification accuracy history')
+    plt.xlabel('Epoch')
+    plt.ylabel('Classification accuracy')
+    plt.legend()
+    plt.show()
+    show_net_weights(net)
+    
+    if val_acc > best_val_acc:
+        best_net = net # store the best model into this 
+        best_val_acc = val_acc
+        
 #################################################################################
 # TODO: Tune hyperparameters using the validation set. Store your best trained  #
 # model in best_net.                                                            #
@@ -300,11 +333,7 @@ best_net = None # store the best model into this
 # write code to sweep through possible combinations of hyperparameters          #
 # automatically like we did on the previous exercises.                          #
 #################################################################################
-# *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-pass
-
-# *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
 
 # In[ ]:
@@ -332,7 +361,7 @@ print('Test accuracy: ', test_acc)
 # 2. Add more hidden units.
 # 3. Increase the regularization strength.
 # 4. None of the above.
-# 
+# 1,3
 # $\color{blue}{\textit Your Answer:}$
 # 
 # $\color{blue}{\textit Your Explanation:}$

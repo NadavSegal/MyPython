@@ -349,25 +349,8 @@ for learn in learning_rates:
             Best_svm = [learn, strength]
             best_svm = svm
         
-################################################################################
-# TODO:                                                                        #
-# Write code that chooses the best hyperparameters by tuning on the validation #
-# set. For each combination of hyperparameters, train a linear SVM on the      #
-# training set, compute its accuracy on the training and validation sets, and  #
-# store these numbers in the results dictionary. In addition, store the best   #
-# validation accuracy in best_val and the LinearSVM object that achieves this  #
-# accuracy in best_svm.                                                        #
-#                                                                              #
-# Hint: You should use a small value for num_iters as you develop your         #
-# validation code so that the SVMs don't take much time to train; once you are #
-# confident that your validation code works, you should rerun the validation   #
-# code with a larger value for num_iters.                                      #
-################################################################################
-# *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-pass
 
-# *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     
 # Print out results.
 for lr, reg in sorted(results):
