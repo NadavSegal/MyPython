@@ -321,20 +321,13 @@ for reg in [0.0, 0.7]:
 model = TwoLayerNet()
 solver = None
 
-##############################################################################
-# TODO: Use a Solver instance to train a TwoLayerNet that achieves at least  #
-# 50% accuracy on the validation set.                                        #
-##############################################################################
-# *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-pass
-
-# *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-##############################################################################
-#                             END OF YOUR CODE                               #
-##############################################################################
-
-
+solver = Solver(model, data, update_rule='sgd',\
+                         optim_config={'learning_rate': 1e-3},\
+                         lr_decay=0.95, num_epochs=30, batch_size=100, print_every=100,\
+                             verbose=True, num_train_samples = 500, num_val_samples=None,\
+                               checkpoint_name='NadavCheckPoint')
+    
+solver.train()
 # In[ ]:
 
 
