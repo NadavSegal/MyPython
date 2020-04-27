@@ -323,7 +323,7 @@ solver = None
 
 solver = Solver(model, data, update_rule='sgd',\
                          optim_config={'learning_rate': 1e-3},\
-                         lr_decay=0.95, num_epochs=30, batch_size=100, print_every=100,\
+                         lr_decay=0.95, num_epochs=1, batch_size=100, print_every=100,\
                              verbose=True, num_train_samples = 500, num_val_samples=None,\
                                checkpoint_name='NadavCheckPoint')
     
@@ -403,8 +403,8 @@ small_data = {
   'y_val': data['y_val'],
 }
 
-weight_scale = 1e-2   # Experiment with this!
-learning_rate = 1e-4  # Experiment with this!
+weight_scale = 2e-2   # Experiment with this!
+learning_rate = 1e-2  # Experiment with this!
 model = FullyConnectedNet([100, 100],
               weight_scale=weight_scale, dtype=np.float64)
 solver = Solver(model, small_data,
@@ -439,8 +439,8 @@ small_data = {
   'y_val': data['y_val'],
 }
 
-learning_rate = 2e-3  # Experiment with this!
-weight_scale = 1e-5   # Experiment with this!
+learning_rate = 2e-2  # Experiment with this!
+weight_scale = 3e-2   # Experiment with this!
 model = FullyConnectedNet([100, 100, 100, 100],
                 weight_scale=weight_scale, dtype=np.float64)
 solver = Solver(model, small_data,
@@ -463,8 +463,10 @@ plt.show()
 # Did you notice anything about the comparative difficulty of training the three-layer net vs training the five layer net? In particular, based on your experience, which network seemed more sensitive to the initialization scale? Why do you think that is the case?
 # 
 # ## Answer:
-# [FILL THIS IN]
-# 
+# training five-layer net need bigger weight_scale since it has deeper net so five-layer net's weights get higher probablity to decrease to zero.
+#As five-layer net initialize weights with higher weight scale, so it needs bigger learning rate.
+#three-layer net is more robust than five-layer net. 
+# adding batch normalization will equlize the wights initialization sensativity
 
 # # Update rules
 # So far we have used vanilla stochastic gradient descent (SGD) as our update rule. More sophisticated update rules can make it easier to train deep networks. We will implement a few of the most commonly used update rules and compare them to vanilla SGD.
@@ -703,7 +705,7 @@ plt.show()
 # 
 # 
 # ## Answer: 
-# [FILL THIS IN]
+# because the update step is devided by geometric average of all past Weights. if adam params are set correctlly it wont have the same issue
 # 
 
 # # Train a good model!
@@ -717,19 +719,27 @@ plt.show()
 
 
 best_model = None
-################################################################################
-# TODO: Train the best FullyConnectedNet that you can on CIFAR-10. You might   #
-# find batch/layer normalization and dropout useful. Store your best model in  #
-# the best_model variable.                                                     #
-################################################################################
-# *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-pass
 
-# *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-################################################################################
-#                              END OF YOUR CODE                                #
-################################################################################
+learning_rate = 3.6e-4  # Experiment with this!
+weight_scale = 25e-4   # Experiment with this!
+dropout = 0.85
+normalization = 'batchnorm'
+reg = 0.00000001
+
+model = FullyConnectedNet([100, 100, 100, 100, 100],reg = reg,
+                weight_scale=weight_scale, dtype=np.float64,dropout=dropout,normalization = normalization)
+
+solver = Solver(model, data,
+                print_every=10, num_epochs=4, batch_size=40,
+                update_rule='adam',
+                optim_config={
+                  'learning_rate': learning_rate,
+                },
+                verbose=True
+         )
+solver.train()
+best_model = solver.model
 
 
 # # Test your model!

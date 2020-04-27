@@ -352,8 +352,8 @@ bn_solvers_ws = {}
 solvers_ws = {}
 weight_scales = np.logspace(-4, 0, num=20)
 for i, weight_scale in enumerate(weight_scales):
-  print('Running weight scale %d / %d' % (i + 1, len(weight_scales)))
   bn_model = FullyConnectedNet(hidden_dims, weight_scale=weight_scale, normalization='batchnorm')
+  print('Running weight scale %d / %d' % (i + 1, len(weight_scales)))
   model = FullyConnectedNet(hidden_dims, weight_scale=weight_scale, normalization=None)
 
   bn_solver = Solver(bn_model, small_data,
@@ -428,8 +428,10 @@ plt.show()
 # Describe the results of this experiment. How does the scale of weight initialization affect models with/without batch normalization differently, and why?
 # 
 # ## Answer:
-# [FILL THIS IN]
-# 
+# best val accuracy: when the weights are very smalle the basline accuracy is close to zero apposed to the batchnorm accuracy. this is because without batchnorm the gradints collaps to zero. the batch norm prevent that from happeining. 
+# at mid range weights the baseline is doing ok but less than the batch norm. the batch norm keeps the weights value at the same relation to each other because the inputs to each layer are normilaized. at high weights value the baseline loss explodes because there is no normalization and each layer the weights inputs grow. 
+#Batch normalization makes the net more robust against wrong weight init values
+
 
 # # Batch normalization and batch size
 # We will now run a small experiment to study the interaction of batch normalization and batch size.
@@ -504,7 +506,7 @@ plt.show()
 # Describe the results of this experiment. What does this imply about the relationship between batch normalization and batch size? Why is this relationship observed?
 # 
 # ## Answer:
-# [FILL THIS IN]
+# in order for the batch norm to be effective we have to have big enough batch size. small batch size can make the batch norm to preform worse. this is because the statistic on sampels is not accurate when ther are only few samples. 
 # 
 
 # # Layer Normalization
@@ -523,8 +525,8 @@ plt.show()
 # 4. Setting all RGB values to either 0 or 1 depending on a given threshold.
 # 
 # ## Answer:
-# [FILL THIS IN]
-# 
+# layer: 1, 2, 4
+# batch: 3
 
 # # Layer Normalization: Implementation
 # 
