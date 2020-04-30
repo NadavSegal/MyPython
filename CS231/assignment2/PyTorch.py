@@ -267,8 +267,15 @@ def three_layer_convnet(x, params):
     ################################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
-
+    x = F.conv2d(x,conv_w1, bias = conv_b1,padding=2)
+    x = F.relu(x)
+    x = F.conv2d(x,conv_w2, bias = conv_b2,padding=1)
+    x = F.relu(x)
+    x = flatten(x)
+    fc_w = torch.t(fc_w)
+    scores = F.linear(x,fc_w,fc_b)
+    
+    
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ################################################################################
     #                                 END OF YOUR CODE                             #
@@ -479,17 +486,15 @@ conv_b2 = None
 fc_w = None
 fc_b = None
 
-################################################################################
-# TODO: Initialize the parameters of a three-layer ConvNet.                    #
-################################################################################
-# *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+# x [64, 3 , 32 , 32]
+conv_w1 = random_weight((32, 3, 5, 5))
+conv_b1 = zero_weight((32))
 
-pass
+conv_w2 = random_weight((16, 32, 3, 3))
+conv_b2 = zero_weight((16))
 
-# *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-################################################################################
-#                                 END OF YOUR CODE                             #
-################################################################################
+fc_w = random_weight((16*32*32, 10))
+fc_b = zero_weight((10))
 
 params = [conv_w1, conv_b1, conv_w2, conv_b2, fc_w, fc_b]
 train_part2(three_layer_convnet, params, learning_rate)
