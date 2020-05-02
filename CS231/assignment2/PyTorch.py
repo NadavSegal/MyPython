@@ -569,34 +569,28 @@ test_TwoLayerFC()
 class ThreeLayerConvNet(nn.Module):
     def __init__(self, in_channel, channel_1, channel_2, num_classes):
         super().__init__()
-        ########################################################################
-        # TODO: Set up the layers you need for a three-layer ConvNet with the  #
-        # architecture defined above.                                          #
-        ########################################################################
-        # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
-
-        # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        ########################################################################
-        #                          END OF YOUR CODE                            #       
-        ########################################################################
+        self.channel_1 = nn.Conv2d(in_channel,channel_1,[5,5],padding = 2) 
+        nn.init.kaiming_normal_(self.channel_1.weight) 
+        
+        self.channel_2 = nn.Conv2d(channel_1,channel_2,[3,3],padding = 1) 
+        nn.init.kaiming_normal_(self.channel_2.weight) 
+        
+        self.fcl = nn.Linear(channel_2*32*32,num_classes)
+        nn.init.kaiming_normal_(self.fcl.weight) 
 
     def forward(self, x):
         scores = None
-        ########################################################################
-        # TODO: Implement the forward function for a 3-layer ConvNet. you      #
-        # should use the layers you defined in __init__ and specify the        #
-        # connectivity of those layers in forward()                            #
-        ########################################################################
-        # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
 
-        # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        ########################################################################
-        #                             END OF YOUR CODE                         #
-        ########################################################################
+        x = self.channel_1(x)
+        x = F.relu(x)
+        x = self.channel_2(x)
+        x = F.relu(x)
+        x = flatten(x)
+        scores = self.fcl(x)
+
+
         return scores
 
 
@@ -715,17 +709,10 @@ channel_2 = 16
 
 model = None
 optimizer = None
-################################################################################
-# TODO: Instantiate your ThreeLayerConvNet model and a corresponding optimizer #
-################################################################################
-# *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-pass
-
-# *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-################################################################################
-#                                 END OF YOUR CODE                             
-################################################################################
+learning_rate = 1e-2
+model = ThreeLayerConvNet(3,channel_1,channel_2,10)
+optimizer = optim.SGD(model.parameters(), lr=learning_rate)
 
 train_part34(model, optimizer)
 
@@ -794,18 +781,26 @@ learning_rate = 1e-2
 model = None
 optimizer = None
 
-################################################################################
-# TODO: Rewrite the 2-layer ConvNet with bias from Part III with the           #
-# Sequential API.                                                              #
-################################################################################
-# *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+model = nn.Sequential(
+    nn.Conv2d(3,channel_1, [5,5], padding=2,bias = True),
+    nn.ReLU(),
+    nn.Conv2d(channel_1,channel_2, [3,3], padding=1,bias = True),
+    nn.ReLU(),
+    Flatten(),
+    nn.Linear(channel_2*32*32, 10,bias = True),
+)
 
-pass
-
-# *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-################################################################################
-#                                 END OF YOUR CODE                             
-################################################################################
+for m in model.children():
+    if isinstance(m, nn.Conv2d):
+        m.weight = torch.nn.Parameter(random_weight(m.weight.shape))
+        m.bias = torch.nn.Parameter(zero_weight(m.bias.shape))
+    if isinstance(m,nn.Linear):
+        m.weights = torch.nn.Parameter(random_weight(m.weight.shape))
+        m.bias = torch.nn.Parameter(zero_weight(m.bias.shape))
+                
+# you can use Nesterov momentum in optim.SGD
+optimizer = optim.SGD(model.parameters(), lr=learning_rate,
+                     momentum=0.9, nesterov=True)
 
 train_part34(model, optimizer)
 
@@ -878,8 +873,133 @@ model = None
 optimizer = None
 
 # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+class AllLayerConvNet(nn.Module):
+    def __init__(self, in_channels):
+        super().__init__()
 
-pass
+        self.max1 = nn.MaxPool2d((2,2), stride=(2,2))
+        self.max2 = nn.MaxPool2d((2,2), stride=(2,2))
+        self.max3 = nn.MaxPool2d((2,2), stride=(2,2))
+        
+        self.channel_1 = nn.Conv2d(in_channels[0],in_channels[1],[3,3],padding = 1) 
+        nn.init.kaiming_normal_(self.channel_1.weight) 
+        self.channel_1bn = nn.BatchNorm2d(in_channels[1], track_running_stats=True, momentum = 0.9)
+        
+        self.channel_2 = nn.Conv2d(in_channels[1],in_channels[2],[3,3],padding = 1) 
+        nn.init.kaiming_normal_(self.channel_2.weight) 
+        self.channel_2bn = nn.BatchNorm2d(in_channels[2], track_running_stats=True, momentum = 0.9)
+
+        self.channel_3 = nn.Conv2d(in_channels[2],in_channels[3],[3,3],padding = 1) 
+        nn.init.kaiming_normal_(self.channel_3.weight) 
+        self.channel_3bn = nn.BatchNorm2d(in_channels[3], track_running_stats=True, momentum = 0.9)
+
+        self.channel_4 = nn.Conv2d(in_channels[3],in_channels[4],[3,3],padding = 1) 
+        nn.init.kaiming_normal_(self.channel_4.weight) 
+        self.channel_4bn = nn.BatchNorm2d(in_channels[4], track_running_stats=True, momentum = 0.9)
+        
+        self.max2 = nn.MaxPool2d((2,2), stride=(2,2))
+
+        self.channel_5 = nn.Conv2d(in_channels[4],in_channels[5],[3,3],padding = 1) 
+        nn.init.kaiming_normal_(self.channel_5.weight) 
+        self.channel_5bn = nn.BatchNorm2d(in_channels[5], track_running_stats=True, momentum = 0.9)
+
+        self.channel_6 = nn.Conv2d(in_channels[5],in_channels[6],[7,7],padding = 3) 
+        nn.init.kaiming_normal_(self.channel_6.weight)         
+        self.channel_6bn = nn.BatchNorm2d(in_channels[6], track_running_stats=True, momentum = 0.9)
+        
+        self.fcl_1 = nn.Linear(in_channels[3]*8*8,in_channels[7])
+        nn.init.kaiming_normal_(self.fcl_1.weight) 
+        self.fcl_1bn = nn.BatchNorm1d(in_channels[7])
+        
+        self.fcl_2 = nn.Linear(in_channels[7],in_channels[8])
+        nn.init.kaiming_normal_(self.fcl_2.weight) 
+        self.fcl_2bn = nn.BatchNorm1d(in_channels[8])
+        
+        self.fcl_3 = nn.Linear(in_channels[8],in_channels[9])
+        nn.init.kaiming_normal_(self.fcl_3.weight) 
+        self.fcl_3bn = nn.BatchNorm1d(in_channels[9])
+
+        #self.drop_layer = nn.Dropout(p=p)
+        
+        
+        
+    def forward(self, x):
+        scores = None
+
+
+        x = self.channel_1(x)
+        x = self.channel_1bn(x)
+        x = F.dropout(x,0.1)
+        x = F.leaky_relu(x)
+
+        x = self.max1(x)
+
+        x = self.channel_2(x)
+        x = self.channel_2bn(x)
+        x = F.dropout(x,0.1)
+        x = F.leaky_relu(x)
+
+        x = self.max2(x)
+
+        x = self.channel_3(x)
+        x = self.channel_3bn(x)
+        x = F.dropout(x,0.1)
+        x = F.leaky_relu(x)
+
+        #x = self.max3(x)
+
+        #x = self.channel_4(x)
+        #x = self.channel_4bn(x)
+        #x = F.dropout(x,0.5)
+        #x = F.relu(x)
+        
+        #x = self.max2(x)
+
+        #x = self.channel_5(x)
+        #x = self.channel_5bn(x)
+        #x = F.dropout(x,0.8)
+        #x = F.relu(x)
+
+        #x = self.channel_6(x)
+        #x = self.channel_6bn(x)
+        #x = F.dropout(x,0.8)
+        #x = F.relu(x)       
+        
+        x = flatten(x)
+        
+        x = self.fcl_1(x)
+        x = self.fcl_1bn(x)
+        #x = F.dropout(x,0.2)
+        x = F.leaky_relu(x)
+        
+        #x = self.fcl_2(x)
+        #x = self.fcl_2bn(x)
+        #x = F.dropout(x,0.1)
+        #x = F.leaky_relu(x)        
+        
+        x = self.fcl_3(x)
+        #x = self.fcl_3bn(x)
+        #x = F.dropout(x,0.1)
+        #x = F.leaky_relu(x)        
+        
+        scores = F.softmax(x)
+
+
+        return scores
+    
+    
+learning_rate = [0.001,0.002]
+learning_rate = [0.002,0.004,0.006]
+learning_rate = [0.010,0.016]
+learning_rate = [0.0001, 0.001,0.01]
+learning_rate = [0.001]
+#68.1 70 69
+#65 66
+in_channel = 3
+
+#HiddenChannels = [in_channel, 16, 32 ,64, 64, 12, 12, 60, 60, 10]
+HiddenChannels = [in_channel, 16, 32 ,64,64   , 16, 64, 64, 64, 10]
+
 
 # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 ################################################################################
@@ -887,7 +1007,12 @@ pass
 ################################################################################
 
 # You should get at least 70% accuracy
-train_part34(model, optimizer, epochs=10)
+for Learning_rate in learning_rate:
+    model = AllLayerConvNet(HiddenChannels)
+    #optimizer = optim.SGD(model.parameters(), lr=0.01)
+    optimizer = optim.Adam(model.parameters(), lr=Learning_rate)
+    train_part34(model, optimizer, epochs=10)
+    print(Learning_rate)
 
 
 # ## Describe what you did 
