@@ -141,13 +141,64 @@ class CaptioningRNN(object):
         # in your implementation, if needed.                                       #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        # N = number of samples = 10
+        # T = number of elements in squance = 12
+        # H = hidden states = 40
+        # V = number of total words= 40 
+        # W = word vector = 30
+        # D = image feture representation = 20                    
+        # features = (N, D) (10,20)
+        
+        # N images feature represntation (D) to N hidden states
+        out1 = np.dot(features,W_proj) + b_proj
+        # out = (N, H)
+        
+        # N sentensace with T words in index form to vector form 
+        # captions_in = indexs (N, T)
+        out2, cache2 = word_embedding_forward(captions_in, W_embed)
+        # out = (N, T, W)
+        
+        # input the N sentatnces of T words in vector form (N,T,W) 
+        # and N initial hidden states to N sentances of T words hidden states
+        x = out2
+        h0 = out1
+        h, cache3 = rnn_forward(x, h0, Wx, Wh, b)
+        # out = (N, T, H)
+        
+        # input the (N,T,H) last hidden states to (N,T,V) score for each word 
+        x = h
+        out, cache4 = temporal_affine_forward(x, W_vocab, b_vocab)
+        # out = (N, T, V)
+        
+        # compute loss comparing to GT 
+        y = captions_out
+        x = out
+        mask = mask
+        loss, dscors = temporal_softmax_loss(x, y, mask, verbose=False)
+        
+        
+        
+        dx, dW_vocab, db_vocab = temporal_affine_backward(dscors,cache4)
+        
+        dx, dh0, dWx, dWh, db = rnn_backward(dx, cache3)
+        
+        dW_embed = word_embedding_backward(dx,cache2)
+        
+        dW_proj = np.dot(features.T,dh0)
+        db_proj = np.sum(dh0,0)
 
-        pass
-
-        # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        ############################################################################
-        #                             END OF YOUR CODE                             #
-        ############################################################################
+        # store gradients
+        grads['W_embed'] = dW_embed
+    
+        grads['W_proj'] = dW_proj
+        grads['b_proj'] = db_proj
+    
+        grads['Wx'] = dWx
+        grads['Wh'] = dWh
+        grads['b'] = db
+    
+        grads['W_vocab'] = dW_vocab
+        grads['b_vocab'] = db_vocab        
 
         return loss, grads
 
@@ -211,7 +262,38 @@ class CaptioningRNN(object):
         ###########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        # N = number of samples = 2
+        # T = number of elements in squance = 
+        # H = hidden states = 512
+        # V = number of total words = 1004
+        # W = word vector = 256
+        # D = image feture representation = 512           
+        
+        # features(N,D)
+        # N images feature represntation (D) to N hidden states
+        prev_h,_ = affine_forward(features,W_proj,b_proj)
+        # out = (N, H)
+        
+        Word, _ = word_embedding_forward(self._start, W_embed)
+        Word = Word.reshape((1,-1))
+        Word = np.repeat(Word,2,0)
+        # out = (N, T, W)
+        
+        for i in range(max_length):
+            
+            next_h, _ = rnn_step_forward(Word, prev_h, Wx, Wh, b) 
+            #(N, H)
+            prev_h = next_h
+            next_h = next_h[:,np.newaxis,:]
+            
+            # input the (N,T,H) last hidden states to (N,T,V) score for each word 
+            WordScors, _ = temporal_affine_forward(next_h, W_vocab, b_vocab)
+            # out = (N, T, V)
+            
+            NextWordIndx = np.argmax(WordScors, axis = 2)
+            captions[:,i] = np.squeeze(NextWordIndx)
+            Word, _ = word_embedding_forward(NextWordIndx, W_embed)
+            Word = np.squeeze(Word)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
