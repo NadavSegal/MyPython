@@ -162,8 +162,8 @@ def sample_noise(batch_size, dim):
     """
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
-
+    Noise = 2*(torch.rand([batch_size, dim])-0.5)
+    return Noise
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
 
@@ -224,8 +224,8 @@ def initialize_weights(m):
 # In[ ]:
 
 
-dtype = torch.FloatTensor
-#dtype = torch.cuda.FloatTensor ## UNCOMMENT THIS LINE IF YOU'RE ON A GPU!
+#dtype = torch.FloatTensor
+dtype = torch.cuda.FloatTensor ## UNCOMMENT THIS LINE IF YOU'RE ON A GPU!
 
 
 # # Discriminator
@@ -248,11 +248,14 @@ def discriminator():
     Build and return a PyTorch model implementing the architecture above.
     """
     model = nn.Sequential(
-            # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-            pass
-
-            # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        
+        Flatten(),
+        nn.Linear(784, 256,bias = True),
+        nn.LeakyReLU(0.01),
+        nn.Linear(256, 256,bias = True),
+        nn.LeakyReLU(0.01),        
+        nn.Linear(256, 1,bias = True),
+        
     )
     return model
 
@@ -290,11 +293,14 @@ def generator(noise_dim=NOISE_DIM):
     Build and return a PyTorch model implementing the architecture above.
     """
     model = nn.Sequential(
-            # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            pass
+            nn.Linear(noise_dim, 1024,bias = True),
+            nn.ReLU(),
+            nn.Linear(1024,1024),
+            nn.ReLU(),
+            nn.Linear(1024,784),
+            nn.Tanh(),
 
-            # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     )
     return model
 
@@ -373,7 +379,18 @@ def discriminator_loss(logits_real, logits_fake):
     Returns:
     - loss: PyTorch Tensor containing (scalar) the loss for the discriminator.
     """
-    loss = None
+    # Batch size.
+    N = logits_real.size()
+    # Target label vector, the discriminator should be aiming
+    true_labels = torch.ones(N).type(dtype)  
+    
+    # Discriminator loss has 2 parts: how well it classifies real images and how well it
+    # classifies fake images.
+    real_image_loss = bce_loss(logits_real, true_labels)
+    fake_image_loss = bce_loss(logits_fake, 1 - true_labels)
+    
+    loss = real_image_loss + fake_image_loss    
+    
     return loss
 
 def generator_loss(logits_fake):
@@ -386,7 +403,12 @@ def generator_loss(logits_fake):
     Returns:
     - loss: PyTorch Tensor containing the (scalar) loss for the generator.
     """
-    loss = None
+    N = logits_fake.size()
+    true_labels = torch.ones(N).type(dtype)
+    #true_labels = Variable(torch.ones(N)).type(dtype)
+    loss = bce_loss(logits_fake,true_labels)
+    
+    
     return loss
 
 
@@ -431,7 +453,9 @@ def get_optimizer(model):
     Returns:
     - An Adam optimizer for the model with the desired hyperparameters.
     """
-    optimizer = None
+    optimizer = optim.Adam(model.parameters(), lr=1e-3,
+                     betas=(0.5, 0.999))
+    
     return optimizer
 
 
@@ -536,8 +560,12 @@ def ls_discriminator_loss(scores_real, scores_fake):
     """
     loss = None
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    # Batch size.
+    
+    L1 = 0.5*torch.mean((scores_real - 1)**2) 
+    L2 = 0.5*torch.mean((scores_fake)**2)
+    loss = L1 + L2
 
-    pass
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return loss
@@ -552,7 +580,7 @@ def ls_generator_loss(scores_fake):
     Outputs:
     - loss: A PyTorch Tensor containing the loss.
     """
-    loss = None
+    loss = 0.5*torch.mean((scores_fake-1)**2)
     return loss
 
 
@@ -615,7 +643,17 @@ def build_dc_classifier():
     return nn.Sequential(
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        Unflatten(batch_size, 1, 28, 28),
+        nn.Conv2d(1,32,5,stride = 1,bias = True),
+        nn.LeakyReLU(0.01),
+        nn.MaxPool2d(2,stride = 2),
+        nn.Conv2d(32,64,5,stride = 1,bias = True),
+        nn.LeakyReLU(0.01),
+        nn.MaxPool2d(2,stride = 2),
+        Flatten(),
+        nn.Linear(1024, 1024,bias = True),
+        nn.LeakyReLU(0.01),
+        nn.Linear(1024, 1,bias = True),
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     )
@@ -626,8 +664,8 @@ out = b(data)
 print(out.size())
 
 
-# Check the number of parameters in your classifier as a sanity check:
 
+# Check the number of parameters in your classifier as a sanity check:
 # In[ ]:
 
 
@@ -668,8 +706,20 @@ def build_dc_generator(noise_dim=NOISE_DIM):
     """
     return nn.Sequential(
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
+        #Unflatten(batch_size,96),
+        nn.Linear(noise_dim,1024,bias = True),
+        nn.ReLU(),
+        nn.BatchNorm1d(1024),
+        nn.Linear(1024,7*7*128),
+        nn.ReLU(),
+        nn.BatchNorm1d(7*7*128),
+        Unflatten(batch_size,128,7,7),
+        nn.ConvTranspose2d(128,64,(4,4),stride = 2,padding = 1),
+        nn.ReLU(),
+        nn.BatchNorm2d(64),
+        nn.ConvTranspose2d(64,1,(4,4),stride = 2,padding = 1),
+        nn.Tanh(),
+        Flatten()
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     )
