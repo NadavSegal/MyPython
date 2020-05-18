@@ -162,8 +162,11 @@ class CaptioningRNN(object):
         # and N initial hidden states to N sentances of T words hidden states
         x = out2
         h0 = out1
-        h, cache3 = rnn_forward(x, h0, Wx, Wh, b)
-        # out = (N, T, H)
+        if self.cell_type == 'rnn':
+            h, cache3 = rnn_forward(x, h0, Wx, Wh, b)
+            # out = (N, T, H)
+        if self.cell_type == 'lstm':
+            h, cache3 = lstm_forward(x, h0, Wx, Wh, b)
         
         # input the (N,T,H) last hidden states to (N,T,V) score for each word 
         x = h
@@ -180,7 +183,10 @@ class CaptioningRNN(object):
         
         dx, dW_vocab, db_vocab = temporal_affine_backward(dscors,cache4)
         
-        dx, dh0, dWx, dWh, db = rnn_backward(dx, cache3)
+        if self.cell_type == 'rnn':
+            dx, dh0, dWx, dWh, db = rnn_backward(dx, cache3)
+        if self.cell_type == 'lstm':
+            dx, dh0, dWx, dWh, db = lstm_backward(dx, cache3)
         
         dW_embed = word_embedding_backward(dx,cache2)
         
@@ -278,11 +284,16 @@ class CaptioningRNN(object):
         Word = Word.reshape((1,-1))
         Word = np.repeat(Word,2,0)
         # out = (N, T, W)
-        
+        prev_c = np.zeros(prev_h.shape)
         for i in range(max_length):
             
-            next_h, _ = rnn_step_forward(Word, prev_h, Wx, Wh, b) 
-            #(N, H)
+            if self.cell_type == 'rnn':
+                next_h, _ = rnn_step_forward(Word, prev_h, Wx, Wh, b) 
+                #(N, H)
+            if self.cell_type == 'lstm':
+                next_h, next_c, _ = lstm_step_forward(Word, prev_h, prev_c, Wx, Wh, b) 
+                #(N, H)                
+            prev_c = next_c    
             prev_h = next_h
             next_h = next_h[:,np.newaxis,:]
             

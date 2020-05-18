@@ -244,7 +244,7 @@ print('db error: ', rel_error(db_num, db))
 # Recall that in an LSTM the input gate $i$, forget gate $f$, and output gate $o$ are all outputs of a sigmoid function. Why don't we use the ReLU activation function instead of sigmoid to compute these values? Explain.
 # 
 # **Your Answer:** 
-# 
+#     "**Answer:** We use sigmoid function because we want to simulate a switch that will allow to flow the value of the previous cell (forget gate $f$), to write new values in the cell (input gate $i$) or to use the current value of the cell in the computation of the next hidden state. Recall that sigmoid output values are between 0 and 1. Thus, it can model a switch and allow to flow information. On the other hand, ReLU output values are between 0 and +inf. Thus, we can have the problem of exploding gradients, also we are not simulating a switch at all because we can have values greater than 1."
 # 
 
 # # LSTM captioning model

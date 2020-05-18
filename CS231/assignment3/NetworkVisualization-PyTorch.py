@@ -179,22 +179,20 @@ def compute_saliency_maps(X, y, model):
     X.requires_grad_()
     
     saliency = None
-    ##############################################################################
-    # TODO: Implement this function. Perform a forward and backward pass through #
-    # the model to compute the gradient of the correct class score with respect  #
-    # to each input image. You first want to compute the loss over the correct   #
-    # scores (we'll combine losses across a batch by summing), and then compute  #
-    # the gradients with a backward pass.                                        #
-    ##############################################################################
-    # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    scores = model.forward(X)
+    x = scores.gather(1, y.view(-1, 1)).squeeze()
+    loss = -torch.sum(x)
+    loss.backward()
+    
+    #logits = model.forward(X)
+    #logits = logits.gather(1, y.view(-1, 1)).squeeze()
+    #logits.backward(torch.FloatTensor([1., 1., 1., 1., 1.]))            
+    
+    saliency = abs(X.grad)
+    saliency, _ = torch.max(saliency, dim=1)
 
-    # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    ##############################################################################
-    #                             END OF YOUR CODE                               #
-    ##############################################################################
-    return saliency
+    return saliency.squeeze()
 
 
 # Once you have completed the implementation in the cell above, run the following to visualize some class saliency maps on our example images from the ImageNet validation set:
@@ -233,7 +231,7 @@ show_saliency_maps(X, y)
 # A friend of yours suggests that in order to find an image that maximizes the correct score, we can perform gradient ascent on the input image, but instead of the gradient we can actually use the saliency map in each step to update the image. Is this assertion true? Why or why not?
 # 
 # **Your Answer:** 
-# 
+#  no, because we have abs 
 # 
 
 # # Fooling Images
@@ -263,27 +261,21 @@ def make_fooling_image(X, target_y, model):
     X_fooling = X_fooling.requires_grad_()
     
     learning_rate = 1
-    ##############################################################################
-    # TODO: Generate a fooling image X_fooling that the model will classify as   #
-    # the class target_y. You should perform gradient ascent on the score of the #
-    # target class, stopping when the model is fooled.                           #
-    # When computing an update step, first normalize the gradient:               #
-    #   dX = learning_rate * g / ||g||_2                                         #
-    #                                                                            #
-    # You should write a training loop.                                          #
-    #                                                                            #
-    # HINT: For most examples, you should be able to generate a fooling image    #
-    # in fewer than 100 iterations of gradient ascent.                           #
-    # You can print your progress over iterations to check your algorithm.       #
-    ##############################################################################
-    # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
-
-    # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    ##############################################################################
-    #                             END OF YOUR CODE                               #
-    ##############################################################################
+    test = False
+    while not test:
+        scores = model.forward(X_fooling).squeeze()
+        score = scores[target_y]
+        print(score)
+        loss = -score
+        loss.backward()
+    
+        g = X_fooling.grad.data
+        dX = learning_rate * g / torch.norm(g, 2)
+        X_fooling.data -= dX
+        
+        test = torch.argmax(model.forward(X_fooling))==target_y
+        
     return X_fooling
 
 
@@ -421,22 +413,19 @@ def create_class_visualization(target_y, model, dtype, **kwargs):
         ox, oy = random.randint(0, max_jitter), random.randint(0, max_jitter)
         img.data.copy_(jitter(img.data, ox, oy))
 
-        ########################################################################
-        # TODO: Use the model to compute the gradient of the score for the     #
-        # class target_y with respect to the pixels of the image, and make a   #
-        # gradient step on the image using the learning rate. Don't forget the #
-        # L2 regularization term!                                              #
-        # Be very careful about the signs of elements in your code.            #
-        ########################################################################
-        # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
-
-        # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        ########################################################################
-        #                             END OF YOUR CODE                         #
-        ########################################################################
+        scores = model.forward(img).squeeze()
+        score = scores[target_y]
         
+        RI = l2_reg*torch.norm(img, 2)
+        (score - RI).backward()
+        
+        g = img.grad.data
+        dX = learning_rate * g / torch.norm(g, 2)
+        img.data += dX
+        img.grad.data.zero_()
+
+
         # Undo the random jitter
         img.data.copy_(jitter(img.data, -ox, -oy))
 
@@ -470,11 +459,11 @@ dtype = torch.FloatTensor
 model.type(dtype)
 
 target_y = 76 # Tarantula
-# target_y = 78 # Tick
-# target_y = 187 # Yorkshire Terrier
-# target_y = 683 # Oboe
-# target_y = 366 # Gorilla
-# target_y = 604 # Hourglass
+#target_y = 78 # Tick
+#target_y = 187 # Yorkshire Terrier
+#target_y = 683 # Oboe
+#target_y = 366 # Gorilla
+#target_y = 604 # Hourglass
 out = create_class_visualization(target_y, model, dtype)
 
 
