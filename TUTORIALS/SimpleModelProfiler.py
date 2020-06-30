@@ -1,4 +1,4 @@
-## Pytorch profiler
+## Pytorch profiler (model)
 import torch
 import torchvision.models as models
 
@@ -13,10 +13,12 @@ prof.export_chrome_trace('/home/nadav/Documents/MyPython/TUTORIALS/Tests/profile
 prof.export_chrome_trace('/home/nadav/Documents/MyPython/TUTORIALS/Tests/profile.json')
 prof.export_chrome_trace('/home/nadav/Documents/MyPython/TUTORIALS/Tests/profile.txt')
 
-## Python profiler
+## Python profiler (function or script)
 import cProfile
 # option 1:
 cProfile.run('model(x)')
 # option 2:
 python -m cProfile myscript.py
 python -m cProfile -o output.file mine.py <args>
+
+python -m memory_profiler myscript.py
